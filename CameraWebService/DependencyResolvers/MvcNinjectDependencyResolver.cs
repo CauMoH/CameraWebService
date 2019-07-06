@@ -1,0 +1,26 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Web.Mvc;
+using Ninject;
+
+namespace CameraWebService.DependencyResolvers
+{
+    public class MvcNinjectDependencyResolver : IDependencyResolver
+    {
+        private readonly IKernel _kernel;
+        public MvcNinjectDependencyResolver(IKernel kernel)
+        {
+            _kernel = kernel;
+        }
+
+        public object GetService(Type serviceType)
+        {
+            return _kernel.TryGet(serviceType);
+        }
+
+        public IEnumerable<object> GetServices(Type serviceType)
+        {
+            return _kernel.GetAll(serviceType);
+        }
+    }
+}
