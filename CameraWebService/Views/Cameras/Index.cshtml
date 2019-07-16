@@ -5,7 +5,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Index</h2>
+<h2>Список камер</h2>
 
 <p>
     @Html.ActionLink("Добавить камеру", "Create")
@@ -24,7 +24,7 @@
     {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Name)
+                @Html.ActionLink(item.Name, "CameraViewer", item)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.IpAddress)

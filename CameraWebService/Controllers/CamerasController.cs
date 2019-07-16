@@ -5,12 +5,21 @@ using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
+using AForge.Video;
+using CameraService.Core.CameraStreamService;
+using CameraWebService.Models;
 
 namespace CameraWebService.Controllers
 {
     public class CamerasController : Controller
     {
         private readonly CameraServerDataModel _db = new CameraServerDataModel();
+        private readonly ICameraStreamSaver _cameraStreamSaver;
+
+        public CamerasController(ICameraStreamSaver cameraStreamSaver)
+        {
+            _cameraStreamSaver = cameraStreamSaver;
+        }
 
         // GET: Cameras
         public ActionResult Index()
@@ -111,6 +120,14 @@ namespace CameraWebService.Controllers
             _db.Cameras.Remove(camera ?? throw new InvalidOperationException());
             _db.SaveChanges();
             return RedirectToAction("Index");
+        }
+
+        public ActionResult CameraViewer(Camera camera)
+        {
+            var stream = _cameraStreamSaver.GetCameraCaptureStream(camera.Id);
+            var vm = new CameraViewModel(camera, stream);
+
+            return View(vm);
         }
 
         protected override void Dispose(bool disposing)

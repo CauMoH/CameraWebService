@@ -1,0 +1,25 @@
+﻿@model CameraWebService.Models.CameraViewModel
+
+@{
+    ViewBag.Title = "CameraViewer";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<body>
+<div>
+    @{
+        var filePath = "~/Content/" + Model.Camera.Name + ".jpeg";
+        <img id="LiveImg" width="640" height="480" alt="" src="@Url.Content(filePath)?"/>
+        <script>
+            var myImg = document.getElementById("LiveImg");
+            if (myImg){
+                window.setInterval(function(){
+                    myImg.src = myImg.src.replace(/\?.*$/, '?' + Math.random());
+                }, 300);
+            }        
+        </script>
+    }
+
+</div>
+</body>
+
