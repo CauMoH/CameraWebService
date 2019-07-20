@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using CameraService.Core.Entities;
 using CameraWebService.DAL.EntityFramework;
 using System.Data.Entity;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Web.Mvc;
 using AForge.Video;
 using CameraService.Core.CameraStreamService;
 using CameraWebService.Models;
+using Newtonsoft.Json;
 
 namespace CameraWebService.Controllers
 {
@@ -137,6 +140,20 @@ namespace CameraWebService.Controllers
                 _db.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        [HttpPost]
+        public ActionResult LedControl(string cameraAddress, string action)
+        {
+            var camera = _db.Cameras.FirstOrDefault(cam => cam.IpAddress == cameraAddress);
+
+            if (camera != null)
+            {
+                var stream = _cameraStreamSaver.GetCameraCaptureStream(camera.Id);
+                stream.SetLedState(action == "turnOn");
+            }
+           
+            return RedirectToAction("CameraViewer", camera);
         }
     }
 }

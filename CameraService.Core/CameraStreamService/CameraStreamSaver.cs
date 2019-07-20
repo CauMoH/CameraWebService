@@ -26,7 +26,7 @@ namespace CameraService.Core.CameraStreamService
             var cameras = _unitOfWork.CameraRepository.GetAllCameras();
             foreach (var camera in cameras)
             {
-                _cameraStreams.Add(new CameraStream(camera));
+                _cameraStreams.Add(new CameraStream(camera, _logger));
             }
         }
 
