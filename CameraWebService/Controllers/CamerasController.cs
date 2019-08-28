@@ -142,18 +142,17 @@ namespace CameraWebService.Controllers
             base.Dispose(disposing);
         }
 
-        [HttpPost]
-        public ActionResult LedControl(string cameraAddress, string action)
+        public ActionResult PtzControl(string ipAddress, string actionType)
         {
-            var camera = _db.Cameras.FirstOrDefault(cam => cam.IpAddress == cameraAddress);
+            var camera = _db.Cameras.FirstOrDefault(cam => cam.IpAddress == ipAddress);
 
             if (camera != null)
             {
                 var stream = _cameraStreamSaver.GetCameraCaptureStream(camera.Id);
-                stream.SetLedState(action == "turnOn");
+                stream.SetPtzState(actionType);
             }
-           
-            return RedirectToAction("CameraViewer", camera);
+
+            return new JsonResult { Data = actionType, JsonRequestBehavior = JsonRequestBehavior.AllowGet };
         }
     }
 }

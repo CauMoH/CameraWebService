@@ -9,8 +9,6 @@ namespace CameraWebService.Models
 
         public CameraStream CameraStream { get; }
 
-        public bool IsOnLed => CameraStream != null && CameraStream.LedState;
-
         public CameraViewModel(Camera camera, CameraStream cameraStream)
         {
             Camera = camera;

@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
-using System.Timers;
+using Accord.Video.FFMPEG;
 using AForge.Video;
 using CameraService.Core.Entities;
 using CameraService.Core.Logger;
@@ -14,41 +15,46 @@ namespace CameraService.Core.CameraStreamService
     {
         private readonly MJPEGStream _stream = new MJPEGStream();
         private readonly Camera _camera;
-        private readonly Timer _updatePropsTimer = new Timer(1000);
         private readonly ILogger _logger;
+        private readonly VideoFileWriter _videoFileWriter = new VideoFileWriter();
         
+        private long _frames;
+        private const int FrameRate = 8;
+        private readonly long MaxVideoFrames = FrameRate * 60 * 5; //5 минут видео
+
         public string FilePath { get; }
         public int Id => _camera.Id;
 
-        public bool LedState { get; private set; }
-        
+        public string GetFilePath => @"C:\Videos\" +
+                                     _camera.Name + "_" +
+                                     DateTime.Now.ToString("MM_dd_yyyy HH_mm") +
+                                     ".avi";
+
+
         public CameraStream(Camera camera, ILogger logger)
         {
             _logger = logger;
 
             _camera = camera;
-
+            
             FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Content", _camera.Name + ".jpeg");
+            
+            _videoFileWriter.Open(GetFilePath, 800, 600, FrameRate, VideoCodec.MPEG4);
             
             var source = "http://" + camera.IpAddress + "/";
             _stream.Source = source;
             _stream.NewFrame += StreamOnNewFrame;
             _stream.Start();
-
-            _updatePropsTimer.Elapsed += UpdatePropsTimer_OnElapsed;
-            _updatePropsTimer.Start();
         }
 
-        public void SetLedState(bool state)
+        public void SetPtzState(string command)
         {
             try
             {
                 var ip = _camera.IpAddress.Substring(0, _camera.IpAddress.IndexOf(":", StringComparison.Ordinal));
                 var url = "http://" + ip;
 
-                var data = "led?params=";
-
-                data = state ? data + "1" : data + "0";
+                var data = "ptz?params=" + command;
 
                 var request = (HttpWebRequest)WebRequest.Create(url + "/" + data);
                 request.Method = "POST";
@@ -61,7 +67,7 @@ namespace CameraService.Core.CameraStreamService
                 {
                     var response = responseReader.ReadToEnd();
                     dynamic result = JsonConvert.DeserializeObject(response);
-                    LedState = result.return_value;
+                    var resut = result.return_value;
                 }
             }
             catch (Exception exception)
@@ -70,16 +76,33 @@ namespace CameraService.Core.CameraStreamService
             }
         }
 
-        #region Event Handlers
-
-        private void UpdatePropsTimer_OnElapsed(object sender, ElapsedEventArgs e)
+        public void ResetRecording()
         {
-            SetLedState(LedState);
+            OpenRecording();
         }
+
+        private void OpenRecording()
+        {
+            _frames = 0;
+            _videoFileWriter.Close();
+            _videoFileWriter.Open(GetFilePath, 800, 600, FrameRate, VideoCodec.MPEG4);
+        }
+
+        #region Event Handlers
 
         private void StreamOnNewFrame(object sender, NewFrameEventArgs e)
         {
+            e.Frame.RotateFlip(RotateFlipType.Rotate180FlipNone);
             e.Frame.Save(FilePath, ImageFormat.Jpeg);
+            
+            _videoFileWriter.WriteVideoFrame(e.Frame);
+
+            _frames++;
+
+            if (_frames > MaxVideoFrames)
+            {
+                OpenRecording();
+            }
         }
 
         #endregion

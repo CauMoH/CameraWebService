@@ -8,69 +8,50 @@
 
 <body>
     <div>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 
-        @{
-            <table>
-                <tr>
-                    <td>
-                        @using (Html.BeginForm("LedControl", "Cameras", FormMethod.Post))
-                        {
-                            <input type="hidden" name="cameraAddress" value="@Model.Camera.IpAddress" />
-                            <button name="action" value="turnOn">ВКЛЮЧИТЬ</button>
-                            <button name="action" value="turnOff">ВЫКЛЮЧИТЬ</button>
-                        }
-                    </td>
-                    <td>
-                        <canvas id="circlecanvas" width="20" height="30"></canvas>
+        <table>
+
+            <tr>
+                <td>
+                    <button type='button' onclick="ControlClick('left')">←</button>
+                    <button type='button' onclick="ControlClick('right')">→</button>
+                    <button type='button' onclick="ControlClick('up')">↑</button>
+                    <button type='button' onclick="ControlClick('down')">↓</button>
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    @{
+                        var filePath = "~/Content/" + Model.Camera.Name + ".jpeg";
+                        <img id="LiveImg" width="800" height="600" alt="" src="@Url.Content(filePath)?" />
                         <script>
-                        var canvas = document.getElementById("circlecanvas");
-                        var context = canvas.getContext("2d");
-                        context.arc(10, 10, 10, 0, Math.PI * 2, false);
-
-                        var model = @Html.Raw(Json.Encode(Model));
-
-                        if (model.IsOnLed) {
-                            context.fillStyle = "green";
-                        } else {
-                            context.fillStyle = "red";
-                        }
-                        context.fill();
-
-                        if (canvas) {
-                            window.setInterval(function() {
-
-                                    var model = @Html.Raw(Json.Encode(Model));
-
-                                    if (model.IsOnLed) {
-                                        context.fillStyle = "green";
-                                    } else {
-                                        context.fillStyle = "red";
-                                    }
-                                    context.fill();
+                            var myImg = document.getElementById("LiveImg");
+                            if (myImg) {
+                                window.setInterval(function () {
+                                    myImg.src = myImg.src.replace(/\?.*$/, '?' + Math.random());
                                 },
-                                1000);
-                        }
-
+                                    100);
+                            }
                         </script>
-                    </td>
-                </tr>
-            </table>
-        }
+                    }
+                </td>
+            </tr>
 
-        @{
-            var filePath = "~/Content/" + Model.Camera.Name + ".jpeg";
-            <img id="LiveImg" width="1024" height="768" alt="" src="@Url.Content(filePath)?" />
-            <script>
-                var myImg = document.getElementById("LiveImg");
-                if (myImg) {
-                    window.setInterval(function () {
-                        myImg.src = myImg.src.replace(/\?.*$/, '?' + Math.random());
-                    },
-                        100);
-                }
-            </script>
-        }
+        </table>
+
 
     </div>
 </body>
+
+<script>
+    function ControlClick(action) {
+        var ip = '@Model.Camera.IpAddress';
+        $.get("/Cameras/PtzControl", {ipAddress : ip, actionType : action},
+            function(data) {
+                $("p").html(data);
+            });
+    }
+</script>
 
