@@ -20,14 +20,14 @@ namespace CameraService.Core.CameraStreamService
         
         private long _frames;
         private const int FrameRate = 8;
-        private readonly long MaxVideoFrames = FrameRate * 60 * 5; //5 минут видео
+        private const long MaxVideoFrames = FrameRate * 60 * 5; //5 минут видео
 
         public string FilePath { get; }
         public int Id => _camera.Id;
 
         public string GetFilePath => @"C:\Videos\" +
                                      _camera.Name + "_" +
-                                     DateTime.Now.ToString("MM_dd_yyyy HH_mm") +
+                                     DateTime.Now.ToString("MM_dd_yyyy HH_mm_ss") +
                                      ".avi";
 
 
@@ -39,7 +39,7 @@ namespace CameraService.Core.CameraStreamService
             
             FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Content", _camera.Name + ".jpeg");
             
-            _videoFileWriter.Open(GetFilePath, 800, 600, FrameRate, VideoCodec.MPEG4);
+            _videoFileWriter.Open(GetFilePath, 1024, 768, FrameRate, VideoCodec.MPEG4);
             
             var source = "http://" + camera.IpAddress + "/";
             _stream.Source = source;
@@ -85,7 +85,7 @@ namespace CameraService.Core.CameraStreamService
         {
             _frames = 0;
             _videoFileWriter.Close();
-            _videoFileWriter.Open(GetFilePath, 800, 600, FrameRate, VideoCodec.MPEG4);
+            _videoFileWriter.Open(GetFilePath, 1024, 768, FrameRate, VideoCodec.MPEG4);
         }
 
         #region Event Handlers

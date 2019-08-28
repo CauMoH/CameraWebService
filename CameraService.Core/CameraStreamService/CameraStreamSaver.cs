@@ -15,12 +15,14 @@ namespace CameraService.Core.CameraStreamService
         private readonly List<CameraStream> _cameraStreams = new List<CameraStream>();
         private readonly Timer _clearTimer = new Timer(60000);
         private const int MaxCountVideos = 1200;
+        private const int NumberOfDeleteVideos = 36; //3 часа записей
 
         public CameraStreamSaver(IUnitOfWork unitOfWork, ILogger logger)
         {
             _logger = logger;
 
             _clearTimer.Elapsed += ClearTimerOn_Elapsed;
+            _clearTimer.Start();
 
             _unitOfWork = unitOfWork;
             StartCamerasRecording();
@@ -48,21 +50,24 @@ namespace CameraService.Core.CameraStreamService
 
         private void ClearTimerOn_Elapsed(object sender, ElapsedEventArgs e)
         {
-            var files = Directory.GetFiles(@"C:\Videos", "*", SearchOption.AllDirectories);
+            var info = new DirectoryInfo(@"C:\Videos");
+            var files = info.GetFiles().OrderBy(p => p.LastWriteTime).ToArray();
 
             if (files.Length > MaxCountVideos)
             {
-                foreach (var cameraStream in _cameraStreams)
+                for (var index = 0; index < NumberOfDeleteVideos; index++)
                 {
-                    cameraStream.ResetRecording();   
+                    var file = files[index];
+                    try
+                    {
+                        File.Delete(file.FullName);
+                    }
+                    catch (Exception exception)
+                    {
+                        _logger.WriteError(exception);
+                    }
                 }
             }
-
-            foreach (var file in files)
-            {
-                File.Delete(file);
-            }
-
         }
 
         #endregion
